@@ -1,52 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Luxury Raffle</title>
 
 <style>
 
 body{
-    font-family: 'Segoe UI', sans-serif;
+    font-family:'Segoe UI',sans-serif;
     background:#0a0a0a;
     color:#fff;
     margin:0;
 }
 
-/* HEADER */
 h1{
     text-align:center;
     margin:20px 10px;
     font-size:28px;
-    background: linear-gradient(90deg, gold, #fff, gold);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    background:linear-gradient(90deg,gold,#fff,gold);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
 }
 
-/* CONTAINER */
+
 .container{
     display:grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
     gap:20px;
     padding:20px;
 }
 
-/* CARD */
+
 .card{
     background:#121212;
     padding:15px;
     border-radius:12px;
     box-shadow:0 0 10px rgba(255,215,0,0.15);
-    transition:0.3s;
-    animation:fadeIn 0.6s ease forwards;
+    transition:.3s;
+    animation:fadeIn .6s ease forwards;
 }
+
 
 .card:hover{
     transform:scale(1.03);
 }
 
-/* IMAGE */
+
 img{
     width:100%;
     height:180px;
@@ -54,20 +56,18 @@ img{
     border-radius:10px;
 }
 
-/* PRODUCT NAME */
+
 .card h3{
     color:#00e6ff;
     margin:10px 0;
-    font-size:18px;
 }
 
-/* TEXT */
+
 .card p{
     color:#bbb;
-    font-size:14px;
 }
 
-/* BUTTON */
+
 button{
     margin-top:12px;
     padding:12px;
@@ -80,144 +80,298 @@ button{
     cursor:pointer;
 }
 
-/* LOADING */
+
 .skeleton{
     height:300px;
     border-radius:12px;
-    background: linear-gradient(90deg,#1a1a1a,#2a2a2a,#1a1a1a);
-    background-size:200% 100%;
-    animation: shimmer 1.5s infinite;
+    background:#222;
+    animation:pulse 1.5s infinite;
 }
 
-@keyframes shimmer{
-    0%{background-position:200% 0}
-    100%{background-position:-200% 0}
+
+@keyframes pulse{
+    50%{
+        opacity:.5;
+    }
 }
+
 
 @keyframes fadeIn{
-    from{opacity:0; transform:translateY(10px);}
-    to{opacity:1; transform:translateY(0);}
+    from{
+        opacity:0;
+        transform:translateY(10px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
 }
 
-/* MOBILE TWEAKS */
-@media (max-width:600px){
 
-    h1{
-        font-size:22px;
-    }
+@media(max-width:600px){
 
-    .card{
-        padding:12px;
-    }
+h1{
+font-size:22px;
+}
 
-    img{
-        height:150px;
-    }
+.card{
+padding:12px;
+}
 
-    button{
-        padding:14px;
-        font-size:16px;
-    }
+img{
+height:150px;
+}
 
 }
 
 </style>
+
 </head>
+
 
 <body>
 
-<h1>Luxury Raffle Marketplace</h1>
+
+<h1>
+Luxury Raffle Marketplace
+</h1>
+
 
 <div class="container" id="products"></div>
 
+
+
 <script>
+
+
+const API_URL = "https://raffle-site-x3qw.onrender.com";
+
+
 
 async function loadProducts(){
 
-    const container = document.getElementById("products");
 
-    container.innerHTML = `
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-        <div class="skeleton"></div>
-    `;
+const container=document.getElementById("products");
 
-    const res = await fetch("http://localhost:3000/products");
-    const data = await res.json();
 
-    setTimeout(()=>{
+container.innerHTML=`
 
-        container.innerHTML = data.map(p=>{
+<div class="skeleton"></div>
+<div class="skeleton"></div>
+<div class="skeleton"></div>
 
-            const remaining = p.totalTickets - p.soldTickets;
+`;
 
-            return `
-            <div class="card">
 
-                <img src="http://localhost:3000${p.image}" />
 
-                <h3>${p.name}</h3>
+try{
 
-                <p>${p.description}</p>
 
-                <p><b>KSh ${p.price}</b> per ticket</p>
+const res = await fetch(
+`${API_URL}/products`
+);
 
-                <p style="color:gold;">
-                    ${remaining} tickets left
-                </p>
 
-                <button onclick="buyTicket(${p.id})">
-                    Buy Ticket
-                </button>
+const data = await res.json();
 
-            </div>
-            `;
 
-        }).join("");
 
-    }, 600);
+setTimeout(()=>{
+
+
+container.innerHTML=data.map(p=>{
+
+
+const remaining =
+p.totalTickets - p.soldTickets;
+
+
+
+return `
+
+<div class="card">
+
+
+<img src="${API_URL}${p.image}">
+
+
+<h3>
+${p.name}
+</h3>
+
+
+<p>
+${p.description}
+</p>
+
+
+<p>
+<b>KSh ${p.price}</b> per ticket
+</p>
+
+
+<p style="color:gold;">
+${remaining} tickets left
+</p>
+
+
+<button onclick="buyTicket(${p.id})">
+Buy Ticket
+</button>
+
+
+</div>
+
+`;
+
+
+}).join("");
+
+
+
+},600);
+
+
 
 }
+
+catch(error){
+
+
+container.innerHTML=`
+
+<h2>
+Unable to load products
+</h2>
+
+<p>
+Please try again later.
+</p>
+
+`;
+
+
+console.log(error);
+
+
+}
+
+
+}
+
+
+
+
 
 async function buyTicket(productId){
 
-    const phone = prompt("Enter phone (2547XXXXXXXX)");
-    if(!phone) return;
 
-    const quantity = prompt("How many tickets?");
-    if(!quantity) return;
 
-    try{
+const phone =
+prompt("Enter phone (2547XXXXXXXX)");
 
-        const res = await fetch("http://localhost:3000/mpesa/stkpush",{
-            method:"POST",
-            headers:{
-                "Content-Type":"application/json"
-            },
-            body: JSON.stringify({
-                phone,
-                productId,
-                quantity:Number(quantity)
-            })
-        });
 
-        const data = await res.json();
 
-        if(data.ResponseCode === "0"){
-            alert("📲 Payment prompt sent. Check your phone.");
-        }else{
-            alert("Payment failed");
-        }
+if(!phone)return;
 
-    }catch(err){
-        alert("Server error");
-    }
+
+
+const quantity =
+prompt("How many tickets?");
+
+
+
+if(!quantity)return;
+
+
+
+try{
+
+
+const res = await fetch(
+
+`${API_URL}/mpesa/stkpush`,
+
+{
+
+method:"POST",
+
+headers:{
+
+"Content-Type":"application/json"
+
+},
+
+body:JSON.stringify({
+
+phone,
+
+productId,
+
+quantity:Number(quantity)
+
+})
 
 }
 
+);
+
+
+
+const data =
+await res.json();
+
+
+
+if(data.ResponseCode==="0"){
+
+
+alert(
+"📲 Payment prompt sent. Check your phone."
+);
+
+
+}
+
+else{
+
+
+alert(
+"Payment request failed"
+);
+
+
+}
+
+
+
+}
+
+
+catch(err){
+
+
+alert(
+"Server connection error"
+);
+
+
+console.log(err);
+
+
+}
+
+
+}
+
+
+
 loadProducts();
 
+
 </script>
+
 
 </body>
 </html>
