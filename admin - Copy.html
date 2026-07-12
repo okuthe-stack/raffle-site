@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin</title>
+
+<style>
+body{background:#111;color:white;font-family:Arial;padding:30px}
+h1{color:#d4af37}
+input,textarea{width:100%;margin:5px;padding:8px;border-radius:8px;border:none}
+button{background:#d4af37;border:none;padding:8px 15px;border-radius:15px;margin:5px}
+.product{background:#1c1c1c;padding:15px;margin:10px 0;border-radius:10px}
+</style>
+
+</head>
+
+<body>
+
+<h1>Admin Dashboard</h1>
+
+<h2>Add Product</h2>
+
+<form id="form">
+<input id="name" placeholder="Name">
+<textarea id="desc"></textarea>
+<input id="price" type="number" placeholder="Price">
+<input id="tickets" type="number" placeholder="Tickets">
+<input id="image" type="file">
+<button>Create</button>
+</form>
+
+<h2>Products</h2>
+<div id="list"></div>
+
+<script>
+
+const API="http://localhost:3000";
+
+async function load(){
+
+    const res=await fetch(API+"/products");
+    const data=await res.json();
+
+    const list=document.getElementById("list");
+    list.innerHTML="";
+
+    data.forEach(p=>{
+
+        list.innerHTML+=`
+
+        <div class="product">
+
+        <b>${p.name}</b><br>
+
+        Price:
+        <input id="price-${p.id}" value="${p.price}">
+
+        Tickets:
+        <input id="tickets-${p.id}" value="${p.totalTickets}">
+
+        <br>
+
+        <button onclick="update(${p.id})">Save</button>
+        <button onclick="del(${p.id})">Delete</button>
+
+        </div>
+
+        `;
+    });
+}
+
+// UPDATE
+async function update(id){
+
+    const price=document.getElementById("price-"+id).value;
+    const tickets=document.getElementById("tickets-"+id).value;
+
+    await fetch(API+"/update-product",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({id,price,totalTickets:tickets})
+    });
+
+    alert("Updated!");
+    load();
+}
+
+// DELETE
+async function del(id){
+    await fetch(API+"/delete-product/"+id,{method:"DELETE"});
+    load();
+}
+
+// CREATE
+document.getElementById("form").addEventListener("submit", async e=>{
+    e.preventDefault();
+
+    const name=nameEl.value;
+    const description=desc.value;
+    const price=priceEl.value;
+    const tickets=ticketsEl.value;
+    const file=image.files[0];
+
+    const res=await fetch(API+"/create-product",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({name,description,price,totalTickets:tickets})
+    });
+
+    const p=await res.json();
+
+    const fd=new FormData();
+    fd.append("image",file);
+
+    await fetch(API+"/upload/"+p.id,{method:"POST",body:fd});
+
+    load();
+});
+
+const nameEl=document.getElementById("name");
+const desc=document.getElementById("desc");
+const priceEl=document.getElementById("price");
+const ticketsEl=document.getElementById("tickets");
+const image=document.getElementById("image");
+
+load();
+
+</script>
+
+</body>
+</html>

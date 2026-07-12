@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Luxury Raffle Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body{background:#0a0a0a;color:white;font-family:Arial;margin:0;}
+h1{text-align:center;color:gold;padding:20px;}
+.dashboard{display:none;}
+.boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;padding:20px;}
+.box{background:#151515;padding:20px;border-radius:15px;text-align:center;}
+.number{font-size:30px;color:gold;}
+.section{padding:20px;}
+table{width:100%;background:#151515;border-collapse:collapse;}
+th{color:gold;}
+td,th{padding:10px;border-bottom:1px solid #333;text-align:center;}
+button{background:gold;padding:10px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
+input{padding:8px;border-radius:6px;border:none;}
+</style>
+</head>
+
+<body>
+
+<div id="login">
+<h1>Admin Login</h1>
+<center>
+<input id="password" type="password" placeholder="Password">
+<br><br>
+<button onclick="login()">Login</button>
+<p id="message"></p>
+</center>
+</div>
+
+<div class="dashboard" id="dashboard">
+
+<h1>Luxury Raffle Admin Dashboard</h1>
+
+<button onclick="drawWinner()">🎉 Draw Winner</button>
+<h2 id="winnerResult" style="text-align:center;color:gold;"></h2>
+
+<div class="boxes">
+<div class="box"><h3>Products</h3><div id="products">0</div></div>
+<div class="box"><h3>Tickets</h3><div id="ticketCount">0</div></div>
+<div class="box"><h3>Revenue</h3><div id="revenue">0</div></div>
+<div class="box"><h3>Payments</h3><div id="paymentsCount">0</div></div>
+</div>
+
+<div class="section">
+
+<h2>Add Product</h2>
+
+<input id="name" placeholder="Name">
+<input id="desc" placeholder="Description">
+<input id="price" type="number" placeholder="Price">
+<input id="tickets" type="number" placeholder="Total Tickets">
+<button onclick="addProduct()">Add</button>
+
+</div>
+
+<div class="section">
+
+<h2>Products</h2>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Price</th>
+<th>Tickets</th>
+<th>Image</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="productTable"></tbody>
+
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>Payments</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Phone</th>
+<th>Amount</th>
+<th>Product</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="paymentTable"></tbody>
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>Tickets</h2>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Ticket</th>
+<th>Product</th>
+<th>Edit</th>
+</tr>
+</thead>
+<tbody id="ticketTable"></tbody>
+</table>
+
+</div>
+
+<div class="section">
+
+<h2>🏆 Winners</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Ticket</th>
+<th>Product</th>
+<th>Date</th>
+</tr>
+</thead>
+<tbody id="winnerTable"></tbody>
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+function login(){
+if(document.getElementById("password").value==="admin123"){
+document.getElementById("login").style.display="none";
+document.getElementById("dashboard").style.display="block";
+load();
+}else{
+document.getElementById("message").innerText="Wrong password";
+}
+}
+
+async function load(){
+
+const products = await fetch("http://localhost:3000/products").then(r=>r.json());
+const payments = await fetch("http://localhost:3000/payments").then(r=>r.json());
+const tickets = await fetch("http://localhost:3000/tickets").then(r=>r.json());
+const winners = await fetch("http://localhost:3000/winners").then(r=>r.json());
+
+document.getElementById("products").innerText = products.length;
+document.getElementById("paymentsCount").innerText = payments.length;
+document.getElementById("ticketCount").innerText = tickets.length;
+
+let money=0;
+products.forEach(p=> money += p.price * p.soldTickets);
+document.getElementById("revenue").innerText = "KSh "+money;
+
+function name(id){
+let p=products.find(x=>x.id==id);
+return p ? p.name : "Unknown";
+}
+
+// PRODUCTS TABLE
+let html="";
+products.forEach(p=>{
+html+=`
+<tr>
+<td><input value="${p.name}" id="n${p.id}"></td>
+<td><input type="number" value="${p.price}" id="p${p.id}"></td>
+<td><input type="number" value="${p.totalTickets}" id="t${p.id}"></td>
+<td>
+<input type="file" onchange="upload(${p.id},this)">
+</td>
+<td>
+<button onclick="update(${p.id})">Save</button>
+<button onclick="del(${p.id})">Delete</button>
+</td>
+</tr>`;
+});
+document.getElementById("productTable").innerHTML=html;
+
+// PAYMENTS
+let pay="";
+payments.forEach(p=>{
+pay+=`<tr>
+<td>${p.id}</td>
+<td>${p.phone}</td>
+<td>${p.amount}</td>
+<td>${name(p.productId)}</td>
+<td>${p.status}</td>
+</tr>`;
+});
+document.getElementById("paymentTable").innerHTML=pay;
+
+// TICKETS
+let t="";
+tickets.forEach(x=>{
+t+=`<tr>
+<td>${x.id}</td>
+<td>${x.name}</td>
+<td><input value="${x.ticketNumber}" id="tk${x.id}"></td>
+<td>${name(x.productId)}</td>
+<td><button onclick="editTicket(${x.id})">Update</button></td>
+</tr>`;
+});
+document.getElementById("ticketTable").innerHTML=t;
+
+// WINNERS
+let w="";
+winners.forEach(x=>{
+w+=`<tr>
+<td>${x.name}</td>
+<td>${x.ticketNumber}</td>
+<td>${name(x.productId)}</td>
+<td>${x.drawDate}</td>
+</tr>`;
+});
+document.getElementById("winnerTable").innerHTML=w;
+
+}
+
+async function addProduct(){
+await fetch("http://localhost:3000/create-product",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+name:document.getElementById("name").value,
+description:document.getElementById("desc").value,
+price:Number(document.getElementById("price").value),
+totalTickets:Number(document.getElementById("tickets").value)
+})
+});
+load();
+}
+
+async function update(id){
+await fetch("http://localhost:3000/products/"+id,{
+method:"PUT",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+name:document.getElementById("n"+id).value,
+description:"",
+price:Number(document.getElementById("p"+id).value),
+totalTickets:Number(document.getElementById("t"+id).value)
+})
+});
+load();
+}
+
+async function del(id){
+if(confirm("Delete product?")){
+await fetch("http://localhost:3000/products/"+id,{method:"DELETE"});
+load();
+}
+}
+
+async function editTicket(id){
+await fetch("http://localhost:3000/tickets/"+id,{
+method:"PUT",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+ticketNumber:Number(document.getElementById("tk"+id).value)
+})
+});
+load();
+}
+
+async function upload(id,input){
+let form = new FormData();
+form.append("image", input.files[0]);
+
+await fetch("http://localhost:3000/upload/"+id,{
+method:"POST",
+body:form
+});
+
+alert("Image uploaded");
+load();
+}
+
+async function drawWinner(){
+if(!confirm("Draw winner?")) return;
+
+const res = await fetch("http://localhost:3000/draw-winner",{method:"POST"});
+const data = await res.json();
+
+if(data.winner){
+document.getElementById("winnerResult").innerHTML=
+`Winner: ${data.winner.name} | Ticket: ${data.winner.ticketNumber}`;
+load();
+}
+}
+
+</script>
+
+</body>
+</html>
