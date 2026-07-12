@@ -972,7 +972,69 @@ res.json(rows);
 
 
 
+// CUSTOMER TICKET LOOKUP
 
+app.get("/my-tickets/:phone",(req,res)=>{
+
+
+const phone = req.params.phone;
+
+
+
+db.all(
+
+`
+SELECT
+
+tickets.ticketNumber,
+
+tickets.name,
+
+products.name AS product
+
+
+FROM tickets
+
+
+LEFT JOIN products
+
+ON tickets.productId = products.id
+
+
+WHERE tickets.phone=?
+
+
+ORDER BY tickets.id DESC
+
+`,
+
+[phone],
+
+(err,rows)=>{
+
+
+if(err){
+
+return res.json({
+
+error:err.message
+
+});
+
+}
+
+
+
+res.json(rows);
+
+
+
+}
+
+);
+
+
+});
 
 
 
