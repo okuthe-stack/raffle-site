@@ -16,6 +16,26 @@ app.use("/uploads", express.static("uploads"));
 
 const db = new sqlite3.Database("./raffle.db");
 
+// ADD PHONE COLUMN TO OLD TICKETS TABLE IF MISSING
+
+db.run(
+`
+ALTER TABLE tickets ADD COLUMN phone TEXT
+`,
+(err)=>{
+
+if(err){
+
+console.log("Phone column already exists or not needed");
+
+}
+else{
+
+console.log("Phone column added");
+
+}
+
+});
 
 // WINNERS TABLE
 
@@ -652,7 +672,7 @@ VALUES (?,?,?,?)
 
 [
 
-payment.name,
+payment.phone,
 
 payment.phone,
 
